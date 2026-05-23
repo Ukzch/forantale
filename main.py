@@ -77,7 +77,7 @@ game_map = pygame.transform.scale(
 
 logo = load_image(
     "assets/images/n1.png",
-    (500, 200)
+    (560,230)
 )
 
 textbox = load_image(
@@ -103,22 +103,22 @@ note_image = load_image(
 
 play_normal = load_image(
     "assets/images/k1.png",
-    (300, 120)
+    (200, 100)
 )
 
 play_hover = load_image(
     "assets/images/k2.png",
-    (300, 120)
+    (200, 100)
 )
 
 exit_normal = load_image(
     "assets/images/k3.png",
-    (300, 120)
+    (200, 100)
 )
 
 exit_hover = load_image(
     "assets/images/k4.png",
-    (300, 120)
+    (200, 100)
 )
 
 # =========================
@@ -126,24 +126,24 @@ exit_hover = load_image(
 # =========================
 
 # DOWN
-g1 = load_image("assets/images/g1.png", (64, 116))
-g2 = load_image("assets/images/g2.png", (64, 116))
-g3 = load_image("assets/images/g3.png", (64, 116))
+g1 = load_image("assets/images/g1.png", (96, 174))
+g2 = load_image("assets/images/g2.png", (96, 174))
+g3 = load_image("assets/images/g3.png", (96, 174))
 
 # UP
-g4 = load_image("assets/images/g4.png", (64, 116))
-g5 = load_image("assets/images/g5.png", (64, 116))
-g6 = load_image("assets/images/g6.png", (64, 116))
+g4 = load_image("assets/images/g4.png", (96, 174))
+g5 = load_image("assets/images/g5.png", (96, 174))
+g6 = load_image("assets/images/g6.png", (96, 174))
 
 # LEFT
-g7 = load_image("assets/images/g7.png", (64, 116))
-g8 = load_image("assets/images/g8.png", (64, 116))
-g9 = load_image("assets/images/g9.png", (64, 116))
+g7 = load_image("assets/images/g7.png", (96, 174))
+g8 = load_image("assets/images/g8.png", (96, 174))
+g9 = load_image("assets/images/g9.png", (96, 174))
 
 # RIGHT
-g10 = load_image("assets/images/g10.png", (64, 116))
-g11 = load_image("assets/images/g11.png", (64, 116))
-g12 = load_image("assets/images/g12.png", (64, 116))
+g10 = load_image("assets/images/g10.png", (96, 174))
+g11 = load_image("assets/images/g11.png", (96, 174))
+g12 = load_image("assets/images/g12.png", (96, 174))
 
 # =========================
 # BUTTON CLASS
