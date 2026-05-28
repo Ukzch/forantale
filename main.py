@@ -1,12 +1,11 @@
 import pygame
+import random
 import sys
 
 pygame.init()
 pygame.mixer.init()
 
-# =========================
-# SCREEN
-# =========================
+
 
 screen = pygame.display.set_mode(
     (0, 0),
@@ -22,17 +21,12 @@ clock = pygame.time.Clock()
 
 FPS = 60
 
-# =========================
-# MUSIC
-# =========================
 
-pygame.mixer.music.load("assets/sounds/menu.mp3")
+
+pygame.mixer.music.load("assets/music/menu.mp3")
 pygame.mixer.music.play(-1)
 
 
-# =========================
-# LOAD IMAGE
-# =========================
 
 def load_image(path, size=None):
     image = pygame.image.load(path).convert_alpha()
@@ -46,9 +40,7 @@ def load_image(path, size=None):
     return image
 
 
-# =========================
-# BACKGROUNDS
-# =========================
+
 
 menu_bg = pygame.transform.scale(
     pygame.image.load(
@@ -93,35 +85,33 @@ end_screen_image = pygame.transform.scale(
     (WIDTH, HEIGHT)
 )
 
-# =========================
-# UI
-# =========================
+
 
 logo = load_image(
-    "assets/images/n1.png",
+    "assets/images/backgrounds/n1.png",
     (560, 230)
 )
 
 textbox = load_image(
-    "assets/images/tt1.png",
+    "assets/images/backgrounds/tt1.png",
+    (1100, 220)
+)
+textbox2 = load_image(
+    "assets/images/backgrounds/tt2.png",
+    (1100, 220)
+)
+textbox3 = load_image(
+    "assets/images/backgrounds/tt3.png",
     (1100, 220)
 )
 
-# =========================
-# NOTE IMAGE
-# =========================
 
-# РАЗМЕР ЗАПИСКИ:
-# 80x80 или 100x100 идеально
 
 note_image = load_image(
-    "assets/images/note1.png",
+    "assets/images/backgrounds/note1.png",
     (100, 100)
 )
 
-# =========================
-# BUTTONS
-# =========================
 
 play_normal = load_image(
     "assets/images/buttons/k1.png",
@@ -143,9 +133,7 @@ exit_hover = load_image(
     (200, 100)
 )
 
-# =========================
-# PLAYER SPRITES
-# =========================
+
 
 # DOWN
 g1 = load_image("assets/images/player/g1.png", (96, 174))
@@ -168,12 +156,15 @@ g11 = load_image("assets/images/player/g11.png", (96, 174))
 g12 = load_image("assets/images/player/g12.png", (96, 174))
 
 
-npc_image = load_image("assets/images/npc.png", (96, 174)) # Замініть на свій розмір/шлях
+npc_image = load_image("assets/images/backgrounds/npc.png", (140, 94)) # Замініть на свій розмір/шлях
+
+bullet1 = load_image("assets/images/bullets/b1.png", (32, 32))
+bullet2 = load_image("assets/images/bullets/b2.png", (32, 32))
+bullet3 = load_image("assets/images/bullets/b3.png", (32, 32))
+
+bullet_images = [bullet1, bullet2, bullet3]
 
 
-# =========================
-# BUTTON CLASS
-# =========================
 
 class Button:
 
@@ -212,9 +203,7 @@ class Button:
         return False
 
 
-# =========================
-# MENU
-# =========================
+
 
 class MenuScene:
 
@@ -287,16 +276,14 @@ class MenuScene:
                 return "intro"
 
 
-# =========================
-# INTRO
-# =========================
+
 
 class IntroScene:
 
     def __init__(self):
 
         # первая музыка
-        pygame.mixer.music.load("assets/sounds/intro.wav")
+        pygame.mixer.music.load("assets/music/intro.wav")
         pygame.mixer.music.play(-1)
 
         self.second_music = False
@@ -310,7 +297,9 @@ class IntroScene:
             "Де я?..",
             "Що це за місто?..",
             "...",
-            " *Ти побачив записку* ",
+            "*Я побачив дуже велику записку яка більше мене...*",
+            "Що за...",
+            "...",
             "Мені треба йти до записки",
         ]
 
@@ -331,7 +320,7 @@ class IntroScene:
             (90, HEIGHT - 260)
         )
 
-        # typewriter
+
         self.timer += 1
 
         if self.timer >= 2:
@@ -358,7 +347,7 @@ class IntroScene:
             (150, HEIGHT - 170)
         )
 
-        # fade
+
         if self.fade > 0:
             self.fade -= 3
 
@@ -393,9 +382,9 @@ class IntroScene:
                     if self.current_text >= len(
                             self.texts
                     ):
-                        # вторая музыка
+
                         pygame.mixer.music.load(
-                            "assets/sounds/1s-part.mp3"
+                            "assets/music/map1.mp3"
                         )
 
                         pygame.mixer.music.play(-1)
@@ -403,25 +392,18 @@ class IntroScene:
                         return "game"
 
 
-# =========================
-# GAME
-# =========================
+
 
 class GameScene:
 
     def __init__(self):
 
-        # =========================
-        # MAP
-        # =========================
 
         self.current_map = 1
         self.monster_alive = True
         self.stage = "PLAY"
 
-        # =========================
-        # PLAYER
-        # =========================
+
 
         self.x = WIDTH // 2
         self.y = HEIGHT - 250
@@ -432,9 +414,7 @@ class GameScene:
         self.anim_timer = 0
         self.moving = False
 
-        # =========================
-        # NOTE
-        # =========================
+        self.after_death_return = False
 
         self.note_x = 900
         self.note_y = 400
@@ -451,50 +431,56 @@ class GameScene:
         self.note_timer = 0
 
         self.note_texts = [
-            "*Лежить мокра записка від дощу.*",
+            "*Лежить дуже велика та мокра записка від дощу.*",
             "Тут майже нічого не видно...",
             "Але здається тут написано...",
-            "*Привіт!*",
-            "Я написала тобі записку...",
+            "*Привіт!",
+            "Я написала тобі записку за допомогою магії та телепортувала її сюди...*",
+            "ось чому записка така велитенська...",
+            "кхм...давайте далі",
+            "*..Я не встигла віднести тебе до табору.",
+            "Але, схоже, за всіма канонами цієї гри ти маєш дістатися туди сам...",
             "Будь обережним...",
-            "...Лаурель*"
+            "...Лаурель*",
+            "що за...",
+            "гра?!?!",
+            "що тут твориться!!!",
+            "треба йти далі,і тоді я знайду відповідь на це питання"
         ]
 
-        # =========================
-        # MONSTER TEXT
-        # =========================
 
-        self.map2_text = "ЩО ЦЕ ЗА МОНСТР?!"
+        self.map2_text = "що за..."
         self.map2_visible = 0
         self.map2_timer = 0
 
-        # =========================
-        # FONT
-        # =========================
+
+        self.map2_text3 = "СРАЖАЙСЯ АБО ВМРИ!"
+        self.map2_visible3 = 0
+        self.map2_timer3 = 0
+
+
+
+
+        self.monster_phase = 1
+
 
         self.font = pygame.font.SysFont("arial", 35)
 
-        # =========================
-        # MONSTER
-        # =========================
+
 
         self.monster_image = load_image(
-            "assets/images/monster.png",
-            (250, 300)
+            "assets/images/backgrounds/monster.png",
+            (160, 230)
         )
 
-        self.monster_x = WIDTH // 2 - 120
-        self.monster_y = HEIGHT // 2 - 180
+        self.monster_x = WIDTH // 2 - 90
+        self.monster_y = HEIGHT // 2 - 140
 
-        # =========================
-        # MAP CHANGE
-        # =========================
+
 
         self.map_change_zone = pygame.Rect(WIDTH // 2 - 80, 0, 160, 60)
 
-        # =========================
-        # WALLS
-        # =========================
+
 
         self.walls_map1 = [
             pygame.Rect(0, HEIGHT - 50, WIDTH, 50),
@@ -514,22 +500,33 @@ class GameScene:
             pygame.Rect(WIDTH - 50, 0, 50, HEIGHT),
         ]
 
-        # =========================
-        # NPC НА 3 КАРТІ 🆕🆕🆕🆕🆕
-        # =========================
-        self.npc_x = WIDTH // 2 - 48  # По центру
+
+        self.npc_x = WIDTH // 2 - 48
         self.npc_y = HEIGHT // 2 - 100
 
-        # Хитбокс НПС (наприклад, розміром 96х174)
+
         self.npc_rect = pygame.Rect(self.npc_x, self.npc_y, 96, 174)
 
-        self.npc_text = "Привіт! Це кінець демо версії. Дякую за гру!"
+
+        self.npc_dialog = [
+
+            ("YOU", "То це ти?.."),
+            ("YOU", "Лау..."),
+            ("YOU", "Лару...."),
+
+            ("NPC", "Лаурель!"),
+            ("NPC", "Я тебе чекала!"),
+            ("YOU", "Де я?Чому я тут опинився?!?!"),
+            ("NPC", "А це вже ми дізнаємося в повній грі)"),
+            ("NPC", "Бета версія закінчилась,дякую всім за увагу"),
+
+        ]
+
+        self.npc_index = 0
         self.npc_visible = 0
         self.npc_timer = 0
 
-    # =========================
-    # TYPEWRITER
-    # =========================
+
 
     def typewriter(self, text, visible, timer):
         timer += 1
@@ -539,9 +536,22 @@ class GameScene:
                 visible += 1
         return visible, timer
 
-    # =========================
-    # COLLISION
-    # =========================
+    def typewriter2(self, text2, visible, timer):
+        timer += 1
+        if timer >= 2:
+            timer = 0
+            if visible < len(text2):
+                visible += 1
+        return visible, timer
+
+    def typewriter3(self, text3, visible, timer):
+        timer += 1
+        if timer >= 2:
+            timer = 0
+            if visible < len(text3):
+                visible += 1
+        return visible, timer
+
 
     def collision(self, rect):
         if self.current_map == 1:
@@ -556,9 +566,6 @@ class GameScene:
 
         return False
 
-    # =========================
-    # IDLE
-    # =========================
 
     def update_idle(self):
         if self.direction == "down":
@@ -570,9 +577,7 @@ class GameScene:
         elif self.direction == "right":
             self.image = g10
 
-    # =========================
-    # ANIMATION
-    # =========================
+
 
     def animate(self, a, b):
         self.anim_timer += 1
@@ -581,14 +586,9 @@ class GameScene:
             self.frame = 1 - self.frame
         return a if self.frame == 0 else b
 
-    # =========================
-    # UPDATE
-    # =========================
     def update(self):
 
-        # =========================
-        # DRAW MAP
-        # =========================
+
         if self.current_map == 1:
             screen.blit(game_map, (0, 0))
         elif self.current_map == 2:
@@ -597,38 +597,58 @@ class GameScene:
             screen.blit(end_screen_image, (0, 0))
 
 
-        # =========================
-        # NOTE
-        # =========================
+
         if self.current_map == 1:
             screen.blit(note_image, (self.note_x, self.note_y))
 
-        # =========================
-        # MONSTER
-        # =========================
+
         if self.current_map == 2 and self.monster_alive:
             screen.blit(self.monster_image, (self.monster_x, self.monster_y))
 
-        # Малюємо НПС на 3-й карті (без примусового перекриття екрана фоном)
+
         if self.current_map == 3:
             screen.blit(npc_image, (self.npc_x, self.npc_y))
 
-        # Текст НПС з'являється тільки в стані NPC_TEXT
-        if self.stage == "NPC_TEXT":
-            screen.blit(textbox, (90, HEIGHT - 260))
 
-            self.npc_visible, self.npc_timer = self.typewriter(
-                self.npc_text,
+        if self.stage == "NPC_TEXT":
+
+            speaker, current_text = self.npc_dialog[self.npc_index]
+
+
+            if speaker == "YOU":
+                screen.blit(textbox, (90, HEIGHT - 260))
+            else:
+                screen.blit(textbox2, (90, HEIGHT - 260))
+
+            self.npc_visible, self.npc_timer = self.typewriter2(
+                current_text,
                 self.npc_visible,
                 self.npc_timer
             )
 
-            text = self.npc_text[:self.npc_visible]
-            screen.blit(self.font.render(text, True, (255, 255, 255)), (150, HEIGHT - 170))
+            text = current_text[:self.npc_visible]
 
-        # =========================
-        # MOVEMENT
-        # =========================
+
+            name = "" if speaker == "YOU" else ""
+
+            name_surface = self.font.render(
+                name,
+                True,
+                (0, 0, 0)
+            )
+
+            screen.blit(name_surface, (140, HEIGHT - 220))
+
+            # текст
+            text_surface = self.font.render(
+                text,
+                True,
+                (0, 0, 0)
+            )
+
+            screen.blit(text_surface, (150, HEIGHT - 170))
+
+
         new_x = self.x
         new_y = self.y
         self.moving = False
@@ -657,15 +677,11 @@ class GameScene:
                 self.direction = "down"
                 self.moving = True
 
-        # =========================
-        # IDLE FIX
-        # =========================
+
         if not self.moving:
             self.update_idle()
 
-        # =========================
-        # COLLISION
-        # =========================
+
         rect = pygame.Rect(new_x, new_y, 64, 116)
         if not self.collision(rect):
             self.x = new_x
@@ -673,9 +689,7 @@ class GameScene:
 
         player_rect = pygame.Rect(self.x, self.y, 64, 116)
 
-        # =========================
-        # MAP CHANGE
-        # =========================
+
         if self.current_map == 1:
             if player_rect.colliderect(self.map_change_zone):
                 self.current_map = 2
@@ -690,14 +704,10 @@ class GameScene:
                 self.y = HEIGHT - 200
                 self.stage = "PLAY"
 
-        # =========================
-        # PLAYER
-        # =========================
+
         screen.blit(self.image, (self.x, self.y))
 
-        # =========================
-        # NOTE TEXT
-        # =========================
+
         if self.show_note:
             screen.blit(textbox, (90, HEIGHT - 260))
             current = self.note_texts[self.note_index]
@@ -705,18 +715,47 @@ class GameScene:
             text = current[:self.note_visible]
             screen.blit(self.font.render(text, True, (255, 255, 255)), (130, HEIGHT - 170))
 
-        # =========================
-        # MONSTER TEXT
-        # =========================
-        if self.stage == "MONSTER_TEXT":
-            screen.blit(textbox, (90, HEIGHT - 260))
-            self.map2_visible, self.map2_timer = self.typewriter(self.map2_text, self.map2_visible, self.map2_timer)
-            text = self.map2_text[:self.map2_visible]
-            screen.blit(self.font.render(text, True, (255, 255, 255)), (150, HEIGHT - 170))
 
-        # =========================
-        # EVENTS
-        # =========================
+        if self.stage == "MONSTER_TEXT":
+
+            # ===== ПЕРВАЯ ТАБЛИЧКА tt1 =====
+            if self.monster_phase == 1:
+
+                screen.blit(textbox, (90, HEIGHT - 260))
+
+                self.map2_visible, self.map2_timer = self.typewriter(
+                    self.map2_text,
+                    self.map2_visible,
+                    self.map2_timer
+                )
+
+                text = self.map2_text[:self.map2_visible]
+
+                screen.blit(
+                    self.font.render(text, True, (255, 255, 255)),
+                    (150, HEIGHT - 170)
+                )
+
+            elif self.monster_phase == 3:
+
+                screen.blit(textbox3, (90, HEIGHT - 260))
+
+                self.map2_visible3, self.map2_timer3 = self.typewriter3(
+                    self.map2_text3,
+                    self.map2_visible3,
+                    self.map2_timer3
+                )
+
+                text3 = self.map2_text3[:self.map2_visible3]
+
+                screen.blit(
+                    self.font.render(text3, True, (255, 255, 255)),
+                    (150, HEIGHT - 170)
+                )
+
+
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -728,7 +767,7 @@ class GameScene:
                     sys.exit()
 
                 if event.key == pygame.K_RETURN:
-                    # NOTE
+
                     if self.current_map == 1:
                         if player_rect.colliderect(self.note_rect):
                             if not self.show_note:
@@ -742,77 +781,122 @@ class GameScene:
                                     if self.note_index >= len(self.note_texts):
                                         self.show_note = False
 
-                    # MONSTER
                     elif self.stage == "MONSTER_TEXT" and self.current_map == 2:
-                        if self.map2_visible >= len(self.map2_text):
-                            pygame.mixer.music.load("assets/sounds/batle.mp3")
-                            pygame.mixer.music.play(-1)
-                            return "battle"
 
-                    # ВЗАЄМОДІЯ З НПС НА 3 КАРТІ
+                        if self.monster_phase == 1:
+
+                            if self.map2_visible >= len(self.map2_text):
+                                self.monster_phase = 3
+
+                                self.map2_visible3 = 0
+                                self.map2_timer3 = 0
+
+
+                        elif self.monster_phase == 3:
+
+                            if self.map2_visible3 >= len(self.map2_text3):
+                                pygame.mixer.music.load("assets/music/batle.mp3")
+                                pygame.mixer.music.play(-1)
+
+                                return "battle"
+
+
                     elif self.current_map == 3:
-                        # 1. Якщо діалог активний і текст дописався — закриваємо його, вмикаємо PLAY і міняємо фон
-                        if self.stage == "NPC_TEXT":
-                            if self.npc_visible >= len(self.npc_text):
-                                self.stage = "PLAY"
-                                self.npc_spoken = True
 
-                        # 2. Якщо вже поговорили (фон фінальний) і натиснули ENTER — виходимо в меню
+                        if self.stage == "NPC_TEXT":
+
+                            speaker, current_text = self.npc_dialog[self.npc_index]
+
+                            if self.npc_visible >= len(current_text):
+
+                                self.npc_index += 1
+                                self.npc_visible = 0
+                                self.npc_timer = 0
+
+
+                                if self.npc_index >= len(self.npc_dialog):
+                                    self.stage = "PLAY"
+                                    self.npc_spoken = True
+
+
                         elif getattr(self, 'npc_spoken', False):
                             return "to_menu"
 
-                        # 3. Якщо просто ходимо і підійшли близько впритул — запускаємо діалог
+
                         elif self.stage == "PLAY" and not getattr(self, 'npc_spoken', False):
                             if player_rect.colliderect(self.npc_rect):
                                 self.stage = "NPC_TEXT"
                                 self.npc_visible = 0
                                 self.npc_timer = 0
+                                self.npc_index = 0
         return None
 
+class Bullet:
+
+    def __init__(self, x, y, speed_x, speed_y):
+        self.x = x
+        self.y = y
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+
+        self.image = random.choice(bullet_images)
+        self.rect_size = self.image.get_width()
+
+    def update(self):
+        self.x += self.speed_x
+        self.y += self.speed_y
+
+    def draw(self):
+        screen.blit(self.image, (int(self.x), int(self.y)))
+
+    def rect(self):
+        return pygame.Rect(
+            self.x,
+            self.y,
+            self.rect_size,
+            self.rect_size
+        )
 
 class BattleScene:
 
     def __init__(self):
-
         self.player_hp = 100
         self.enemy_hp = 100
-
+        self.heals = 1
         self.font = pygame.font.SysFont(
             "arial",
             40
         )
 
         self.state = "MENU"
-
         self.options = [
             "ATTACK",
             "DEFEND",
-            "RUN"
+            "HEAL"
         ]
 
         self.selected = 0
-
         self.pointer_x = 300
-
-        self.pointer_speed = 8
-
-        self.hit_zone = (
-            500,
-            600
-        )
-
-        self.enemy_timer = 0
-
-        self.defending = False
-
+        self.pointer_speed = 10
+        self.hit_zone = (500, 600)
         self.monster = load_image(
-            "assets/images/monster.png",
-            (350, 420)
+            "assets/images/backgrounds/monster.png",
+            (220, 270)
         )
+
+
 
         self.shake = 0
+        self.soul_x = WIDTH // 2
+        self.soul_y = HEIGHT - 170
+        self.soul_speed = 6
+        self.bullets = []
+        self.attack_timer = 0
+        self.attack_duration = 360
+        self.phase = 1
+        self.invincible_timer = 0
 
-    def draw_text(self, text, x, y, color=(255, 255, 255)):
+    def draw_text(self, text, x, y, color=(255,255,255)):
 
         img = self.font.render(
             text,
@@ -822,38 +906,110 @@ class BattleScene:
 
         screen.blit(img, (x, y))
 
+    def spawn_bullets(self):
+
+        import random
+
+
+        if self.phase == 1:
+
+            for i in range(3):
+
+                x = random.randint(420, 880)
+                y = 390
+
+                self.bullets.append(
+                    Bullet(
+                        x,
+                        y,
+                        0,
+                        random.randint(5, 8)
+                    )
+                )
+
+        elif self.phase == 2:
+
+            for i in range(5):
+
+                x = random.randint(420, 880)
+                y = 390
+
+                self.bullets.append(
+                    Bullet(
+                        x,
+                        y,
+                        random.randint(-2, 2),
+                        random.randint(7, 11)
+                    )
+                )
+
+        elif self.phase == 3:
+
+            for i in range(8):
+
+                x = random.randint(420, 880)
+                y = 390
+
+                self.bullets.append(
+                    Bullet(
+                        x,
+                        y,
+                        random.randint(-4, 4),
+                        random.randint(10, 14)
+                    )
+                )
+
     def update(self):
 
         screen.fill((0, 0, 0))
 
-        pygame.draw.rect(
-            screen,
-            (120, 0, 0),
-            (820, 120, 400, 500)
-        )
+        if self.enemy_hp <= 60:
+            self.phase = 2
+
+        if self.enemy_hp <= 25:
+            self.phase = 3
 
         offset = 0
 
         if self.shake > 0:
+
             offset = -10 if self.shake % 2 == 0 else 10
 
             self.shake -= 1
 
+
+        pygame.draw.rect(
+            screen,
+            (120, 0, 0),
+            (0, 0, 0, 0)
+        )
         screen.blit(
             self.monster,
-            (850 + offset, 140)
+            (550 + offset, 150)
         )
 
         self.draw_text(
             f"PLAYER HP: {self.player_hp}",
-            100,
-            100
+            80,
+            80
         )
 
         self.draw_text(
             f"MONSTER HP: {self.enemy_hp}",
-            100,
-            160
+            80,
+            140
+        )
+
+        self.draw_text(
+            f"PHASE: {self.phase}",
+            80,
+            200
+        )
+
+        self.draw_text(
+            f"HEALS: {self.heals}",
+            80,
+            260
         )
 
         for event in pygame.event.get():
@@ -863,77 +1019,136 @@ class BattleScene:
                 sys.exit()
 
             if event.type == pygame.KEYDOWN:
+
+
                 if self.state == "MENU":
+
                     if event.key == pygame.K_UP:
+
                         self.selected -= 1
+
                         if self.selected < 0:
                             self.selected = len(self.options) - 1
 
                     if event.key == pygame.K_DOWN:
+
                         self.selected += 1
+
                         if self.selected >= len(self.options):
                             self.selected = 0
 
                     if event.key == pygame.K_RETURN:
+
                         choice = self.options[self.selected]
+
+
                         if choice == "ATTACK":
+
                             self.state = "ATTACK"
+
                             self.pointer_x = 300
+
+
                         elif choice == "DEFEND":
-                            self.defending = True
-                            self.state = "ENEMY"
-                        elif choice == "RUN":
-                            return "game"
+
+                            self.state = "DODGE"
+
+                            self.attack_timer = 0
+
+
+                        elif choice == "HEAL":
+
+                            if self.heals > 0:
+
+                                self.player_hp += 30
+
+                                if self.player_hp > 100:
+                                    self.player_hp = 100
+
+                                self.heals -= 1
+
+                            self.state = "DODGE"
+
+                            self.attack_timer = 0
 
                 elif self.state == "ATTACK":
+
                     if event.key == pygame.K_RETURN:
+
                         self.shake = 10
+
                         if self.hit_zone[0] <= self.pointer_x <= self.hit_zone[1]:
-                            self.enemy_hp -= 25
+
+                            damage = 8
+
+                        elif 450 <= self.pointer_x <= 650:
+
+                            damage = 5
+
                         else:
-                            self.enemy_hp -= 10
+
+                            damage = 2
+
+                        self.enemy_hp -= damage
 
                         if self.enemy_hp <= 0:
+
                             game_scene.monster_alive = False
                             game_scene.stage = "PLAY"
-                            # game_scene.current_map = 3
+
                             game_scene.x = WIDTH // 2
                             game_scene.y = HEIGHT - 220
-                            pygame.mixer.music.load("assets/sounds/son2p.mp3")
+
+                            pygame.mixer.music.load(
+                                "assets/music/map2.mp3"
+                            )
+
                             pygame.mixer.music.play(-1)
+
                             return "game"
 
-                        else:
-                            self.state = "ENEMY"
+                        self.state = "DODGE"
+
+                        self.attack_timer = 0
 
         if self.state == "MENU":
 
-            self.draw_text("Choose action:", 100, 260)
+            self.draw_text(
+                "Choose action:",
+                80,
+                340
+            )
 
             for i, option in enumerate(self.options):
+
                 color = (
-                    (255, 255, 0)
+                    (255,255,0)
                     if i == self.selected
                     else
-                    (255, 255, 255)
+                    (255,255,255)
                 )
 
-                self.draw_text(option, 100, 340 + i * 60, color)
+                self.draw_text(
+                    option,
+                    100,
+                    420 + i * 70,
+                    color
+                )
 
         elif self.state == "ATTACK":
 
             pygame.draw.rect(
                 screen,
-                (100, 100, 100),
-                (300, 450, 400, 30)
+                (100,100,100),
+                (300, 650, 400, 30)
             )
 
             pygame.draw.rect(
                 screen,
-                (0, 255, 0),
+                (0,255,0),
                 (
                     self.hit_zone[0],
-                    450,
+                    650,
                     self.hit_zone[1] - self.hit_zone[0],
                     30
                 )
@@ -941,10 +1156,10 @@ class BattleScene:
 
             pygame.draw.rect(
                 screen,
-                (255, 0, 0),
+                (255,0,0),
                 (
                     self.pointer_x,
-                    450,
+                    650,
                     10,
                     30
                 )
@@ -952,59 +1167,142 @@ class BattleScene:
 
             self.pointer_x += self.pointer_speed
 
-            # Перевірка лівого краю
             if self.pointer_x <= 300:
-                self.pointer_x = 300  # Примусово ставимо на лівий край
-                self.pointer_speed *= -1  # Змінюємо напрямок
 
-            # Перевірка правого краю (700 мінус 10 пікселів ширини повзунка = 690)
+                self.pointer_x = 300
+                self.pointer_speed *= -1
+
             elif self.pointer_x >= 690:
-                self.pointer_x = 690  # Примусово ставимо рівно на правий край
-                self.pointer_speed *= -1  # Змінюємо напрямок
+
+                self.pointer_x = 690
+                self.pointer_speed *= -1
 
             self.draw_text(
                 "PRESS ENTER!",
-                100,
-                300
+                80,
+                340
             )
 
-        elif self.state == "ENEMY":
+        elif self.state == "DODGE":
 
-            self.draw_text(
-                "Enemy attacks...",
-                100,
-                300
+            arena_x = 400
+            arena_y = 420
+            arena_w = 500
+            arena_h = 250
+
+            pygame.draw.rect(
+                screen,
+                (255,255,255),
+                (arena_x, arena_y, arena_w, arena_h),
+                4
             )
 
-            self.enemy_timer += 1
+            keys = pygame.key.get_pressed()
 
-            if self.enemy_timer >= 60:
+            if keys[pygame.K_a]:
+                self.soul_x -= self.soul_speed
 
-                self.enemy_timer = 0
+            if keys[pygame.K_d]:
+                self.soul_x += self.soul_speed
 
-                damage = 10
+            if keys[pygame.K_w]:
+                self.soul_y -= self.soul_speed
 
-                if self.defending:
-                    damage = 3
+            if keys[pygame.K_s]:
+                self.soul_y += self.soul_speed
 
-                    self.defending = False
+            self.soul_x = max(
+                arena_x + 10,
+                min(arena_x + arena_w - 10, self.soul_x)
+            )
 
-                self.player_hp -= damage
+            self.soul_y = max(
+                arena_y + 10,
+                min(arena_y + arena_h - 10, self.soul_y)
+            )
 
+            self.attack_timer += 1
+
+            if self.attack_timer % 20 == 0:
+                self.spawn_bullets()
+
+            soul_rect = pygame.Rect(
+                self.soul_x - 8,
+                self.soul_y - 8,
+                16,
+                16
+            )
+
+            if self.invincible_timer > 0:
+                self.invincible_timer -= 1
+
+            for bullet in self.bullets[:]:
+                bullet.update()
+                bullet.draw()
+
+                if bullet.rect().colliderect(soul_rect):
+
+                    if self.invincible_timer <= 0:
+                        damage = 6
+
+                        if self.phase == 2:
+                            damage = 8
+
+                        if self.phase == 3:
+                            damage = 12
+
+                        self.player_hp -= damage
+                        self.invincible_timer = 30
+                if bullet.y > HEIGHT + 100:
+
+                    self.bullets.remove(bullet)
+
+            pygame.draw.circle(
+                screen,
+                (255,0,0),
+                (self.soul_x, self.soul_y),
+                8
+            )
+
+            if self.attack_timer >= self.attack_duration:
+                self.attack_timer = 0
+                self.bullets.clear()
                 self.state = "MENU"
+
+        if self.player_hp <= 0:
+            # возвращаем состояние игры
+            game_scene.current_map = 2
+            game_scene.stage = "MONSTER_TEXT"
+
+            game_scene.monster_alive = True
+            game_scene.x = WIDTH // 2
+            game_scene.y = HEIGHT - 220
+
+
+            game_scene.monster_phase = 1
+            game_scene.map2_visible = 0
+            game_scene.map2_timer = 0
+            game_scene.map2_visible3 = 0
+            game_scene.map2_timer3 = 0
+
+
+            self.bullets.clear()
+            self.player_hp = 100
+            self.enemy_hp = 100
+            self.state = "MENU"
+
+            pygame.mixer.music.load("assets/music/map2.mp3")
+            pygame.mixer.music.play(-1)
+
+            return "game"
 
         return None
 
 
-# =========================
-# START
-# =========================
 game_scene = None
 scene = MenuScene()
 
-# =========================
-# MAIN LOOP
-# =========================
+
 
 while True:
 
@@ -1023,9 +1321,9 @@ while True:
         scene = BattleScene()
 
     if result == "to_menu":
-        game_scene = None  # Скидаємо прогрес гри
-        scene = MenuScene()  # Запускаємо меню
-        pygame.mixer.music.load("assets/sounds/menu.mp3")  # Повертаємо музику меню
+        game_scene = None
+        scene = MenuScene()
+        pygame.mixer.music.load("assets/music/menu.mp3")
         pygame.mixer.music.play(-1)
 
     pygame.display.update()
